@@ -504,6 +504,24 @@
             min-width: 60px;
         }
 
+        .btn-delete-row {
+            background: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: .3s;
+            line-height: 1;
+        }
+
+        .btn-delete-row:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            transform: scale(1.1);
+        }
+
         .npr-high {
             background: rgba(239, 68, 68, 0.2);
             color: var(--danger);
@@ -1458,6 +1476,7 @@
                             <th style="min-width:50px;">D</th>
                             <th style="min-width:65px;">NPR</th>
                             <th style="min-width:140px;">Acción Recomendada</th>
+                            <th style="min-width:40px;">🗑️</th>
                         </tr>
                     </thead>
                     <tbody id="amefBody">
@@ -1561,7 +1580,7 @@
             const tr = document.createElement('tr');
             const d = data || {};
             tr.innerHTML = `
-    <td style="font-weight:700;color:var(--primary);">${rowCount}</td>
+    <td class="row-num" style="font-weight:700;color:var(--primary);">${rowCount}</td>
     <td><input value="${d.comp || ''}" placeholder="Ej: Rodamiento"></td>
     <td><input value="${d.func || ''}" placeholder="Ej: Soportar carga"></td>
     <td><input value="${d.mode || ''}" placeholder="Ej: Desgaste prematuro"></td>
@@ -1573,9 +1592,31 @@
     <td><select onchange="calcNPR(this)">${createSelect(10)}</select></td>
     <td class="npr-cell">—</td>
     <td><input value="${d.action || ''}" placeholder="Ej: Lubricación automática"></td>
+    <td><button class="btn-delete-row" onclick="deleteRow(this)" title="Eliminar fila">❌</button></td>
   `;
             document.getElementById('amefBody').appendChild(tr);
             if (d.s) { const sels = tr.querySelectorAll('select'); sels[0].value = d.s; sels[1].value = d.o; sels[2].value = d.d; calcNPR(sels[0]); }
+        }
+
+        function deleteRow(btn) {
+            const tr = btn.closest('tr');
+            tr.style.transition = '0.3s';
+            tr.style.opacity = '0';
+            tr.style.transform = 'translateX(50px)';
+            setTimeout(() => {
+                tr.remove();
+                renumberRows();
+                updateResults();
+            }, 300);
+        }
+
+        function renumberRows() {
+            const rows = document.querySelectorAll('#amefBody tr');
+            rowCount = rows.length;
+            rows.forEach((tr, i) => {
+                const numCell = tr.querySelector('.row-num');
+                if (numCell) numCell.textContent = i + 1;
+            });
         }
 
         function calcNPR(el) {
@@ -1600,12 +1641,11 @@
         }
 
         function clearTable() {
-            if (confirm('¿Limpiar toda la tabla?')) {
-                document.getElementById('amefBody').innerHTML = '';
-                rowCount = 0;
-                document.getElementById('resultsPanel').style.display = 'none';
-                for (let i = 0; i < 5; i++) addRow();
-            }
+            document.getElementById('amefBody').innerHTML = '';
+            rowCount = 0;
+            document.getElementById('resultsPanel').style.display = 'none';
+            for (let i = 0; i < 5; i++) addRow();
+            showToast('Tabla limpiada correctamente', 'success');
         }
 
         function loadExample() {
