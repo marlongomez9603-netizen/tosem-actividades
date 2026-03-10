@@ -1483,9 +1483,23 @@
                     </tbody>
                 </table>
             </div>
-            <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+            <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;align-items:center;">
                 <button class="btn btn-primary" onclick="addRow()">+ Agregar fila</button>
-                <button class="btn btn-outline" onclick="loadExample()">📥 Cargar ejemplo resuelto</button>
+                <div style="position:relative;display:inline-block;">
+                    <select id="exampleSelector"
+                        style="padding:10px 16px;background:var(--surface);color:var(--primary);border:1px solid var(--primary);border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;appearance:none;padding-right:32px;">
+                        <option value="" disabled selected>📥 Cargar ejemplo…</option>
+                        <option value="bomba">🔧 Bomba Centrífuga P-101</option>
+                        <option value="compresor">🌬️ Compresor de Aire K-201</option>
+                        <option value="banda">⚙️ Banda Transportadora CV-301</option>
+                        <option value="generador">⚡ Generador Diésel GE-401</option>
+                        <option value="torre">🌡️ Torre de Enfriamiento CT-501</option>
+                        <option value="transformador">🔌 Transformador TR-601</option>
+                    </select>
+                    <span
+                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--primary);pointer-events:none;">▼</span>
+                </div>
+                <button class="btn btn-outline" onclick="loadSelectedExample()">📥 Cargar ejemplo</button>
                 <button class="btn btn-outline" onclick="clearTable()">🗑️ Limpiar tabla</button>
                 <button class="btn btn-outline" onclick="calcAll()">📊 Recalcular NPR</button>
             </div>
@@ -1648,18 +1662,72 @@
             showToast('Tabla limpiada correctamente', 'success');
         }
 
-        function loadExample() {
+        function loadSelectedExample() {
+            const sel = document.getElementById('exampleSelector');
+            if (!sel.value) { showToast('Selecciona un ejemplo del menú', 'error'); return; }
+            loadExample(sel.value);
+            sel.selectedIndex = 0;
+        }
+
+        function loadExample(tipo) {
             document.getElementById('amefBody').innerHTML = '';
             rowCount = 0;
-            const examples = [
-                { comp: 'Rodamiento', func: 'Soportar carga radial', mode: 'Desgaste prematuro', effect: 'Vibración alta, paro de bomba', s: '8', cause: 'Lubricación insuficiente', o: '6', control: 'Ruta vibración mensual', d: '5', action: 'Implementar lubricación automática' },
-                { comp: 'Sello mecánico', func: 'Sellar fluido', mode: 'Fuga externa', effect: 'Derrame de crudo, contaminación ambiental', s: '7', cause: 'Desgaste por abrasión (partículas en crudo)', o: '5', control: 'Inspección visual semanal', d: '7', action: 'Cambiar a sello doble con flush plan' },
-                { comp: 'Impulsor', func: 'Generar presión y caudal', mode: 'Erosión de álabes', effect: 'Pérdida de caudal, baja presión', s: '6', cause: 'Partículas abrasivas en el fluido', o: '4', control: 'Medición de presión/caudal', d: '6', action: 'Instalar filtro aguas arriba' },
-                { comp: 'Acople flexible', func: 'Transmitir torque motor→bomba', mode: 'Fractura de elementos elásticos', effect: 'Paro total, daño a sellos', s: '8', cause: 'Desalineación angular excesiva', o: '3', control: 'Verificación en overhaul (anual)', d: '7', action: 'Alineación láser semestral' },
-                { comp: 'Motor eléctrico', func: 'Suministrar potencia', mode: 'Sobrecalentamiento del bobinado', effect: 'Trip térmico, paro no programado', s: '7', cause: 'Ventilador obstruido por polvo', o: '5', control: 'Inspección visual mensual', d: '6', action: 'Limpieza programada quincenal + sensor RTD' },
-            ];
+            const all = {
+                bomba: [
+                    { comp: 'Rodamiento', func: 'Soportar carga radial', mode: 'Desgaste prematuro', effect: 'Vibración alta, paro de bomba', s: '8', cause: 'Lubricación insuficiente', o: '6', control: 'Ruta vibración mensual', d: '5', action: 'Implementar lubricación automática' },
+                    { comp: 'Sello mecánico', func: 'Sellar fluido', mode: 'Fuga externa', effect: 'Derrame de crudo, contaminación', s: '7', cause: 'Desgaste por abrasión', o: '5', control: 'Inspección visual semanal', d: '7', action: 'Cambiar a sello doble con flush plan' },
+                    { comp: 'Impulsor', func: 'Generar presión y caudal', mode: 'Erosión de álabes', effect: 'Pérdida de caudal, baja presión', s: '6', cause: 'Partículas abrasivas en fluido', o: '4', control: 'Medición de presión/caudal', d: '6', action: 'Instalar filtro aguas arriba' },
+                    { comp: 'Acople flexible', func: 'Transmitir torque motor→bomba', mode: 'Fractura de elementos elásticos', effect: 'Paro total, daño a sellos', s: '8', cause: 'Desalineación angular excesiva', o: '3', control: 'Verificación en overhaul anual', d: '7', action: 'Alineación láser semestral' },
+                    { comp: 'Motor eléctrico', func: 'Suministrar potencia', mode: 'Sobrecalentamiento del bobinado', effect: 'Trip térmico, paro no programado', s: '7', cause: 'Ventilador obstruido por polvo', o: '5', control: 'Inspección visual mensual', d: '6', action: 'Limpieza quincenal + sensor RTD' },
+                ],
+                compresor: [
+                    { comp: 'Válvulas de admisión', func: 'Regular entrada de aire', mode: 'Fractura de platinas', effect: 'Pérdida de capacidad de compresión', s: '7', cause: 'Fatiga por ciclos de operación', o: '5', control: 'Medición de presión de descarga', d: '6', action: 'Reemplazo programado cada 8000 hrs' },
+                    { comp: 'Filtro de aire', func: 'Retener partículas del ambiente', mode: 'Saturación / obstrucción', effect: 'Aumento de temperatura, mayor consumo', s: '5', cause: 'Ambiente con alta carga de polvo', o: '7', control: 'Diferencial de presión semanal', d: '3', action: 'Cambio preventivo mensual' },
+                    { comp: 'Sistema de lubricación', func: 'Lubricar pistones y cojinetes', mode: 'Bajo nivel de aceite', effect: 'Desgaste acelerado, falla catastrófica', s: '9', cause: 'Fuga en empaquetaduras', o: '4', control: 'Nivel visual diario', d: '4', action: 'Sensor de nivel con alarma automática' },
+                    { comp: 'Intercooler', func: 'Enfriar aire entre etapas', mode: 'Fouling en tubos', effect: 'Alta temperatura de descarga, trip', s: '6', cause: 'Calidad del agua de enfriamiento', o: '5', control: 'Temperatura de descarga continua', d: '4', action: 'Limpieza química trimestral' },
+                    { comp: 'Correa de transmisión', func: 'Transmitir potencia del motor', mode: 'Desgaste y agrietamiento', effect: 'Rotura, paro inesperado', s: '6', cause: 'Tensión incorrecta o desalineación', o: '4', control: 'Inspección visual quincenal', d: '5', action: 'Tensiómetro + reemplazo cada 6 meses' },
+                ],
+                banda: [
+                    { comp: 'Banda/Correa', func: 'Transportar material', mode: 'Desgarramiento longitudinal', effect: 'Paro de producción, derrame de material', s: '8', cause: 'Objeto extraño atrapado', o: '4', control: 'Inspección visual por turno', d: '6', action: 'Instalar detector de metales upstream' },
+                    { comp: 'Rodillos de carga', func: 'Soportar y guiar la banda', mode: 'Rodillo trabado / bloqueado', effect: 'Desgaste acelerado de banda, calor', s: '7', cause: 'Falla de rodamiento interno', o: '5', control: 'Ronda de inspección semanal', d: '5', action: 'Termografía mensual + rodillos autorregulables' },
+                    { comp: 'Tambor motriz', func: 'Transmitir tracción a la banda', mode: 'Desgaste del recubrimiento', effect: 'Patinaje de banda, reducción de velocidad', s: '6', cause: 'Material abrasivo y agua', o: '5', control: 'Medición de velocidad vs. nominal', d: '6', action: 'Recubrimiento cerámico de alta resistencia' },
+                    { comp: 'Tensor hidráulico', func: 'Mantener tensión de la banda', mode: 'Pérdida de presión hidráulica', effect: 'Banda floja, desalineación, patinaje', s: '7', cause: 'Fuga en sellos del cilindro', o: '3', control: 'Presión del sistema quincenal', d: '5', action: 'Kit de sellos preventivo anual' },
+                    { comp: 'Raspador de retorno', func: 'Limpiar material adherido', mode: 'Desgaste de cuchillas', effect: 'Material adherido en rodillos de retorno', s: '4', cause: 'Material húmedo y pegajoso', o: '7', control: 'Inspección visual diaria', d: '3', action: 'Raspador primario + secundario motorizado' },
+                ],
+                generador: [
+                    { comp: 'Motor diésel', func: 'Convertir energía térmica en mecánica', mode: 'Falla de arranque', effect: 'No hay respaldo eléctrico ante falla de red', s: '9', cause: 'Batería de arranque descargada', o: '4', control: 'Prueba de arranque semanal', d: '3', action: 'Cargador automático + prueba quincenal' },
+                    { comp: 'Sistema de combustible', func: 'Suministrar diésel al motor', mode: 'Inyectores obstruidos', effect: 'Pérdida de potencia, humo negro', s: '7', cause: 'Contaminación del combustible', o: '5', control: 'Análisis de combustible trimestral', d: '5', action: 'Filtro coalescente + tanque con drenaje diario' },
+                    { comp: 'Alternador', func: 'Generar energía eléctrica', mode: 'Falla de aislamiento del bobinado', effect: 'Cortocircuito, paro de generación', s: '9', cause: 'Humedad y polvo en bobinados', o: '3', control: 'Medición de aislamiento semestral', d: '4', action: 'Calefactor antihumedad + Megger trimestral' },
+                    { comp: 'Radiador', func: 'Disipar calor del motor', mode: 'Fuga de refrigerante', effect: 'Sobrecalentamiento, shutdown automático', s: '8', cause: 'Corrosión en tubos del radiador', o: '4', control: 'Nivel de refrigerante diario', d: '4', action: 'Análisis de coolant + aditivos anticorrosión' },
+                    { comp: 'Tablero de transferencia', func: 'Conmutar red ↔ generador', mode: 'Fallo del contactor de transferencia', effect: 'No conmuta: planta sin energía', s: '9', cause: 'Desgaste contactos por arcos', o: '3', control: 'Prueba de transferencia mensual', d: '4', action: 'Reemplazo contactores cada 5 años' },
+                ],
+                torre: [
+                    { comp: 'Ventilador', func: 'Forzar flujo de aire', mode: 'Desbalance de aspas', effect: 'Vibración excesiva, daño a estructura', s: '7', cause: 'Acumulación de incrustaciones', o: '4', control: 'Análisis vibracional trimestral', d: '4', action: 'Limpieza semestral + aspas en FRP' },
+                    { comp: 'Relleno (fill)', func: 'Maximizar superficie de contacto', mode: 'Colapso o degradación', effect: 'Reducción de eficiencia de enfriamiento', s: '6', cause: 'Agua con alta dureza y algas', o: '5', control: 'Inspección visual en parada', d: '7', action: 'Tratamiento químico + biocida continuo' },
+                    { comp: 'Bomba de recirculación', func: 'Circular agua por la torre', mode: 'Cavitación', effect: 'Ruido, vibración, daño al impulsor', s: '7', cause: 'NPSH insuficiente por filtro tapado', o: '4', control: 'Presión succión continua', d: '5', action: 'Filtro autolavable + sensor de presión' },
+                    { comp: 'Sistema de distribución', func: 'Distribuir agua sobre el relleno', mode: 'Boquillas tapadas', effect: 'Enfriamiento desigual, hot spots', s: '5', cause: 'Sedimentos y sólidos en el agua', o: '6', control: 'Temperatura de agua de retorno', d: '6', action: 'Purga continua + filtración lateral' },
+                    { comp: 'Estructura metálica', func: 'Soportar componentes de la torre', mode: 'Corrosión de perfiles', effect: 'Riesgo de colapso estructural', s: '10', cause: 'Ambiente húmedo con químicos', o: '3', control: 'Inspección de espesores anual', d: '5', action: 'Recubrimiento epóxico + inspección UT' },
+                ],
+                transformador: [
+                    { comp: 'Aceite dieléctrico', func: 'Aislar y refrigerar bobinados', mode: 'Degradación térmica del aceite', effect: 'Reducción de rigidez dieléctrica', s: '8', cause: 'Sobrecarga prolongada', o: '4', control: 'Análisis fisicoquímico anual', d: '4', action: 'Regeneración de aceite + monitoreo en línea' },
+                    { comp: 'Bushings (pasatapas)', func: 'Conectar devanados al exterior', mode: 'Falla de aislamiento', effect: 'Explosión, incendio, paro total', s: '10', cause: 'Humedad infiltrada', o: '2', control: 'Termografía semestral', d: '5', action: 'Bushings con sensor capacitivo integrado' },
+                    { comp: 'Tap changer (OLTC)', func: 'Regular voltaje de salida', mode: 'Contactos quemados', effect: 'Voltaje inestable, daño a equipos', s: '7', cause: 'Arcos eléctricos por maniobras frecuentes', o: '4', control: 'Contador de operaciones', d: '5', action: 'Mantenimiento preventivo cada 50k operaciones' },
+                    { comp: 'Radiadores', func: 'Disipar calor del aceite', mode: 'Fuga por corrosión en soldaduras', effect: 'Bajo nivel de aceite, sobrecalentamiento', s: '7', cause: 'Oxidación por ambiente agresivo', o: '3', control: 'Nivel de aceite visual semanal', d: '4', action: 'Pintura anticorrosiva + inspección UT bianual' },
+                    { comp: 'Bobinados', func: 'Transformar voltaje', mode: 'Cortocircuito entre espiras', effect: 'Falla catastrófica, paro prolongado', s: '10', cause: 'Envejecimiento del papel aislante', o: '2', control: 'Análisis de gases disueltos (DGA)', d: '3', action: 'DGA trimestral + monitoreo online de gases' },
+                ],
+            };
+            const equipoNombres = {
+                bomba: 'Bomba Centrífuga P-101',
+                compresor: 'Compresor de Aire K-201',
+                banda: 'Banda Transportadora CV-301',
+                generador: 'Generador Diésel GE-401',
+                torre: 'Torre de Enfriamiento CT-501',
+                transformador: 'Transformador TR-601'
+            };
+            const examples = all[tipo] || all['bomba'];
             examples.forEach(e => addRow(e));
             updateResults();
+            showToast('Ejemplo cargado: ' + (equipoNombres[tipo] || tipo), 'success');
         }
 
         function updateResults() {
